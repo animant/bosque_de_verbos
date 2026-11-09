@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#EEF3F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#12242B" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Bosque de verbos — ліс дієслів</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF3F2; --text:#12242B; --muted:#4D666E; --card:#FFFFFF; --inner:#F4F8F8; --border:#C5D6D8;
+  --line:#2F6F7E; --c-pres:#1D6A78; --c-pret:#AD3F25; --c-fut:#8F5B06; --accent:#8F5B06;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12242B; --text:#F4EFE4; --muted:#9FB4B8; --card:#173038; --inner:#12242B; --border:#28454C;
+    --line:#5FA3AE; --c-pres:#6DB5C0; --c-pret:#E8785A; --c-fut:#E8A33D; --accent:#E8A33D;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12242B; --text:#F4EFE4; --muted:#9FB4B8; --card:#173038; --inner:#12242B; --border:#28454C;
+  --line:#5FA3AE; --c-pres:#6DB5C0; --c-pret:#E8785A; --c-fut:#E8A33D; --accent:#E8A33D;
+  color-scheme:dark;
+}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 8px);}
+*{box-sizing:border-box;}
+[hidden]{display:none !important;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:'Inter',system-ui,sans-serif; line-height:1.5; padding-bottom:56px;
+}
+.tilebar{height:10px;background:repeating-linear-gradient(45deg,var(--line) 0 8px,var(--border) 8px 16px);}
+.wrap{max-width:1240px;margin:0 auto;padding:0 20px;}
+
+header{padding:44px 0 8px;text-align:center;}
+.eyebrow{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
+h1{font-family:'Fraunces',Georgia,serif;font-weight:700;font-size:clamp(34px,6vw,56px);margin:0;letter-spacing:-.01em;line-height:1.1;}
+h1 span{color:var(--accent);}
+.sub{max-width:64ch;margin:14px auto 0;color:var(--muted);font-size:16px;}
+
+/* ---------- filters ---------- */
+.panel{margin:28px 0 4px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;display:grid;gap:14px;}
+.legend-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;}
+.legend-label{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);width:100%;text-align:center;}
+.lg{
+  --c:var(--c-pres);
+  font:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:999px;border:1.5px solid var(--c);color:var(--c);background:transparent;
+  font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px;font-weight:700;
+}
+.lg[data-t="pret"]{--c:var(--c-pret);} .lg[data-t="fut"]{--c:var(--c-fut);}
+.lg small{font-family:'Inter',sans-serif;font-weight:500;font-size:12px;opacity:.9;}
+.lg .dot{width:9px;height:9px;border-radius:2px 7px 2px 7px;background:var(--c);}
+.lg[aria-pressed="true"]{background:var(--c);color:var(--bg);}
+.lg[aria-pressed="true"] .dot{background:var(--bg);}
+.lg:focus-visible,.vc:focus-visible,.pre:focus-visible,.totop:focus-visible,summary:focus-visible{outline:3px solid var(--text);outline-offset:2px;}
+
+.vpanel summary{
+  list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--inner);
+  font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px;font-weight:700;
+}
+.vpanel summary::-webkit-details-marker{display:none;}
+.vpanel summary .sum-count{margin-left:auto;color:var(--accent);}
+.vpanel summary::after{content:"▾";color:var(--muted);transition:transform .15s;}
+.vpanel[open] summary::after{transform:rotate(180deg);}
+.cap{font-size:13px;color:var(--muted);margin:12px 0 10px;}
+.vchips{display:flex;flex-wrap:wrap;gap:8px;}
+.vc{
+  font:inherit;cursor:pointer;display:inline-flex;align-items:baseline;gap:6px;
+  padding:5px 10px;border-radius:8px;border:1px solid var(--border);background:var(--inner);color:var(--text);
+}
+.vc .rk{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:10px;color:var(--muted);min-width:1.1em;}
+.vc b{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px;}
+.vc small{font-size:11px;color:var(--muted);}
+.vc[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent);}
+.vc[aria-pressed="true"] .rk{color:var(--accent);font-weight:700;}
+.vc[aria-pressed="true"]::after{content:"✓";color:var(--accent);font-size:12px;font-weight:700;}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.pre{font:inherit;cursor:pointer;padding:6px 12px;border-radius:8px;border:1px dashed var(--line);background:transparent;color:var(--text);font-size:13px;}
+.status{margin:0;font-size:13px;color:var(--muted);text-align:center;min-height:1.5em;}
+
+/* ---------- tree: tense → person → number → [pronoun | verbs] ---------- */
+.tree{--c:var(--c-pres);--sx:24px;--pad:16px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:26px 24px 30px;margin:26px 0;}
+.tree[data-t="pret"]{--c:var(--c-pret);} .tree[data-t="fut"]{--c:var(--c-fut);}
+.tree-root{text-align:left;}
+.root-node{display:inline-flex;flex-direction:column;align-items:center;padding:10px 26px;border:2px solid var(--c);border-radius:12px;color:var(--c);}
+.root-node b{font-family:'Fraunces',Georgia,serif;font-size:26px;font-weight:700;line-height:1.2;}
+.root-node i{font-family:'JetBrains Mono',ui-monospace,monospace;font-style:normal;font-size:11px;letter-spacing:.1em;text-transform:uppercase;}
+
+.tree > .stem,.branch > .stem{width:2px;height:18px;background:var(--line);margin:0 0 0 var(--sx);}
+.fork{display:grid;position:relative;}
+.fork > .child{position:relative;min-width:0;}
+
+/* persons side by side: horizontal bar, drops at x = --sx of each column */
+.fork.n3{--gap:24px;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap);padding-top:20px;}
+.fork.n3::before{
+  content:"";position:absolute;top:0;height:2px;background:var(--line);
+  left:var(--sx);
+  right:calc((100% - 2 * var(--gap)) / 3 - var(--sx) - 2px);
+}
+.fork.n3 > .child::before{content:"";position:absolute;top:-20px;left:var(--sx);width:2px;height:20px;background:var(--line);}
+
+/* number rows: indent guide with a tick to each pronoun */
+.fork.n2{--gap:18px;--tick:50%;grid-template-columns:minmax(0,1fr);gap:var(--gap);padding:0 0 0 var(--pad);margin-left:var(--sx);}
+.fork.n2 > .child::before{content:"";position:absolute;top:var(--tick);left:calc(-1 * var(--pad));width:var(--pad);height:2px;margin-top:-1px;background:var(--line);}
+.fork.n2 > .child::after{content:"";position:absolute;left:calc(-1 * var(--pad));width:2px;top:calc(var(--gap) / -2);bottom:calc(var(--gap) / -2);background:var(--line);}
+.fork.n2 > .child:first-child::after{top:0;}
+.fork.n2 > .child:last-child::after{bottom:calc(100% - var(--tick) - 1px);}
+
+.branch-node{display:inline-flex;flex-direction:column;align-items:flex-start;padding:8px 18px;border:2px solid var(--line);border-radius:10px;}
+.branch-node b{font-family:'Fraunces',Georgia,serif;font-size:18px;font-weight:600;line-height:1.25;}
+.branch-node i{font-family:'JetBrains Mono',ui-monospace,monospace;font-style:normal;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+
+/* leaf row: pronoun on the left, vertically centred against the list, joined to it by a bracket */
+.leaf{display:flex;align-items:center;}
+.leaf-node{
+  flex:0 0 auto;max-width:112px;display:flex;flex-direction:column;align-items:center;text-align:center;padding:6px 10px;
+  border:1.5px solid var(--c);color:var(--c);border-radius:2px 16px 2px 16px;
+  background:transparent;background:color-mix(in srgb,var(--c) 12%,transparent);
+}
+.leaf-node b{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;}
+.leaf-node .pron{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px;font-weight:700;line-height:1.3;}
+.link{flex:0 0 14px;height:2px;background:var(--c);}
+
+.verbs{
+  flex:1 1 auto;min-width:0;max-width:270px;list-style:none;margin:0;padding:0;display:grid;gap:1px;
+  border:1px solid var(--border);border-left:3px solid var(--c);border-radius:10px;overflow:hidden;background:var(--border);text-align:left;
+}
+.verbs li{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;column-gap:8px;padding:7px 10px;background:var(--inner);}
+.f{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:14px;font-weight:700;color:var(--c);}
+.inf{font-size:12px;color:var(--muted);}
+.twin .f{text-decoration:underline dotted;text-underline-offset:4px;}
+
+.notes{display:grid;gap:12px;margin-top:8px;}
+.note{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:8px;padding:14px 18px;font-size:14px;}
+.note b{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:4px;font-weight:700;}
+.note code{font-family:'JetBrains Mono',ui-monospace,monospace;background:var(--inner);padding:1px 6px;border-radius:4px;font-size:13px;}
+.totop-row{text-align:center;margin-top:22px;}
+.totop{font:inherit;cursor:pointer;padding:8px 16px;border-radius:999px;border:1.5px solid var(--line);background:transparent;color:var(--text);font-size:13px;}
+
+@media (prefers-reduced-motion: reduce){.vpanel summary::after{transition:none;}}
+
+/* ---------- stacked mode (phones, tablets, narrow windows) ---------- */
+@media (max-width:1099px){
+  .wrap{padding:0 14px;}
+  header{padding-top:34px;}
+  .panel{padding:14px;}
+  .tree{--sx:14px;--pad:14px;padding:20px 14px 22px;}
+  .fork.n3{--gap:18px;--tick:28px;grid-template-columns:minmax(0,1fr);padding:0 0 0 var(--pad);margin-left:var(--sx);}
+  .fork.n3::before{display:none;}
+  .fork.n3 > .child::before{top:var(--tick);left:calc(-1 * var(--pad));width:var(--pad);height:2px;margin-top:-1px;}
+  .fork.n3 > .child::after{content:"";position:absolute;left:calc(-1 * var(--pad));width:2px;top:calc(var(--gap) / -2);bottom:calc(var(--gap) / -2);background:var(--line);}
+  .fork.n3 > .child:first-child::after{top:0;}
+  .fork.n3 > .child:last-child::after{bottom:calc(100% - var(--tick) - 1px);}
+  .leaf-node{max-width:104px;padding:6px 8px;}
+}
+
+/* ---------- install button ---------- */
+.install-row{margin:26px 0 0;text-align:center;}
+.install{
+  font:inherit;cursor:pointer;display:inline-flex;flex-direction:column;align-items:center;gap:2px;
+  min-width:min(100%,320px);padding:18px 40px;border:0;border-radius:16px;
+  background:#C8102E;color:#fff;box-shadow:0 6px 0 #8E0B21,0 12px 24px rgba(0,0,0,.25);
+  transition:transform .08s,box-shadow .08s,filter .15s;
+}
+.install b{font-family:'Fraunces',Georgia,serif;font-size:30px;font-weight:700;letter-spacing:.02em;line-height:1.1;}
+.install small{font-size:13px;opacity:.92;}
+.install:hover{filter:brightness(1.1);}
+.install:active{transform:translateY(4px);box-shadow:0 2px 0 #8E0B21,0 6px 14px rgba(0,0,0,.25);}
+.install:focus-visible{outline:3px solid var(--text);outline-offset:4px;}
+.install-hint{max-width:56ch;margin:14px auto 0;font-size:13px;color:var(--muted);}
+@media (prefers-reduced-motion: reduce){.install{transition:none;}}
+</style>
+</head>
+<body>
+<div class="tilebar"></div>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Verbos · A1</div>
+    <h1>Bosque de <span>verbos</span></h1>
+    <p class="sub">Три дерева — три часи. Кожне розгалужується на особи, далі на однину й множину. Після кожного займенника — дієслова в готовій формі: підставляй будь-яке. Вимкнений час згортає все своє дерево.</p>
+  </header>
+  <div class="install-row">
+    <button type="button" class="install" id="install"><b>Install</b><small>встановити як застосунок</small></button>
+    <p class="install-hint" id="install-hint" hidden></p>
+  </div>
+
+
+  <section class="panel" id="filters">
+    <div class="legend-row"><div class="legend-label">Часи · можна вибрати кілька</div><button type="button" class="lg" data-t="pres" aria-pressed="true"><span class="dot"></span>presente<small>теперішній</small></button><button type="button" class="lg" data-t="pret" aria-pressed="true"><span class="dot"></span>pretérito<small>минулий</small></button><button type="button" class="lg" data-t="fut" aria-pressed="true"><span class="dot"></span>futuro<small>майбутній</small></button></div>
+    <details class="vpanel" id="vpanel">
+      <summary><span>Дієслова</span><span class="sum-count" id="vcount">5 з 20</span></summary>
+      <p class="cap">Від найуживанішого до рідшого (приблизно за частотою). Можна вибрати кілька.</p>
+      <div class="vchips"><button type="button" class="vc" data-v="ser" aria-pressed="true"><span class="rk">1</span><b>ser</b><small>бути: хто/що</small></button><button type="button" class="vc" data-v="haber" aria-pressed="true"><span class="rk">2</span><b>haber</b><small>допоміжне</small></button><button type="button" class="vc" data-v="estar" aria-pressed="true"><span class="rk">3</span><b>estar</b><small>бути: де/як</small></button><button type="button" class="vc" data-v="tener" aria-pressed="true"><span class="rk">4</span><b>tener</b><small>мати</small></button><button type="button" class="vc" data-v="hacer" aria-pressed="true"><span class="rk">5</span><b>hacer</b><small>робити</small></button><button type="button" class="vc" data-v="poder" aria-pressed="false"><span class="rk">6</span><b>poder</b><small>могти</small></button><button type="button" class="vc" data-v="decir" aria-pressed="false"><span class="rk">7</span><b>decir</b><small>казати</small></button><button type="button" class="vc" data-v="ir" aria-pressed="false"><span class="rk">8</span><b>ir</b><small>йти</small></button><button type="button" class="vc" data-v="ver" aria-pressed="false"><span class="rk">9</span><b>ver</b><small>бачити</small></button><button type="button" class="vc" data-v="dar" aria-pressed="false"><span class="rk">10</span><b>dar</b><small>давати</small></button><button type="button" class="vc" data-v="saber" aria-pressed="false"><span class="rk">11</span><b>saber</b><small>знати</small></button><button type="button" class="vc" data-v="querer" aria-pressed="false"><span class="rk">12</span><b>querer</b><small>хотіти</small></button><button type="button" class="vc" data-v="llegar" aria-pressed="false"><span class="rk">13</span><b>llegar</b><small>приїжджати</small></button><button type="button" class="vc" data-v="pasar" aria-pressed="false"><span class="rk">14</span><b>pasar</b><small>проходити</small></button><button type="button" class="vc" data-v="deber" aria-pressed="false"><span class="rk">15</span><b>deber</b><small>мусити</small></button><button type="button" class="vc" data-v="poner" aria-pressed="false"><span class="rk">16</span><b>poner</b><small>класти</small></button><button type="button" class="vc" data-v="parecer" aria-pressed="false"><span class="rk">17</span><b>parecer</b><small>здаватися</small></button><button type="button" class="vc" data-v="quedar" aria-pressed="false"><span class="rk">18</span><b>quedar</b><small>залишатися</small></button><button type="button" class="vc" data-v="creer" aria-pressed="false"><span class="rk">19</span><b>creer</b><small>вірити</small></button><button type="button" class="vc" data-v="hablar" aria-pressed="false"><span class="rk">20</span><b>hablar</b><small>говорити</small></button></div>
+      <div class="presets">
+        <button type="button" class="pre" data-n="5">Перші 5</button>
+        <button type="button" class="pre" data-n="10">Перші 10</button>
+        <button type="button" class="pre" data-n="20">Усі 20</button>
+      </div>
+    </details>
+    <p class="status" id="status" aria-live="polite"></p>
+  </section>
+
+  <article class="tree" data-t="pres"><div class="tree-root"><div class="root-node"><b>presente</b><i>теперішній</i></div></div><div class="stem"></div><div class="fork n3"><section class="child branch"><div class="branch-node"><b>1-ша особа</b><i>primera persona</i></div><div class="stem"></div><div class="fork n2"><div class="child leaf"><div class="leaf-node"><b>однина</b><span class="pron">yo</span></div><span class="link" aria-hidden="true"></span><ul class="verbs"><li data-v="ser"><span class="f">soy</span><span class="inf">ser</span></li><li data-v="haber"><span class="f">he</span><span class="inf">haber</span></li><li data-v="estar"><span class="f">estoy</span><span class="inf">estar</span></li><li data-v="tener"><span class="f">tengo</span><span class="inf">tener</span></li><li data-v="hacer"><span class="f">hago</span><span class="inf">hacer</span></li><li data-v="poder" hidden><span class="f">puedo</span><span class="inf">poder</span></li><li data-v="decir" hidden><span class="f">digo</span><span class="inf">decir</span></li><li data-v="ir" hidden><span class="f">voy</span><span class="inf">ir</span></li><li data-v="ver" hidden><span class="f">veo</span><span class="inf">ver</span></li><li data-v="dar" hidden><span class="f">doy</span><span class="inf">dar</span></li><li data-v="saber" hidden><span class="f">sé</span><span class="inf">saber</span></li><li data-v="querer" hidden><span class="f">quiero</span><span class="inf">querer</span></li><li data-v="llegar" hidden><span class="f">llego</span><span class="inf">llegar</span></li><li data-v="pasar" hidden><span class="f">paso</span><span class="inf">pasar</span></li><li data-v="deber" hidden><span class="f">debo</span><span class="inf">deber</span></li><li data-v="poner" hidden><span class="f">pongo</span><span class="inf">poner</span></li><li data-v="parecer" hidden><span class="f">parezco</span><span class="inf">parecer</span></li><li data-v="quedar" hidden><span class="f">quedo</span><span class="inf">quedar</span></li><li data-v="creer" hidden><span class="f">creo</span><span class="inf">creer</span></li><li data-v="hablar" hidden><span class="f">hablo</span><span class="inf">hablar</span></li></ul></div><div class="child leaf"><div class="leaf-node"><b>множина</b><span class="pron">nosotros / nosotras</span></div><span class="link" aria-hidden="true"></span><ul class="verbs"><li data-v="ser"><span class="f">somos</span><span class="inf">ser</span></li><li data-v="haber"><span class="f">hemos</span><span class="inf">haber</span></li><li data-v="estar"><span class="f">estamos</span><span class="inf">estar</span></li><li data-v="tener"><span class="f">tenemos</span><span class="inf">tener</span></li><li data-v="hacer"><span class="f">hacemos</span><span class="inf">hacer</span></li><li data-v="poder" hidden><span class="f">podemos</span><span class="inf">poder</span></li><li data-v="decir" hidden><span class="f">decimos</span><span class="inf">decir</span></li><li data-v="ir" hidden><span class="f">vamos</span><span class="inf">ir</span></li><li data-v="ver" hidden><span class="f">vemos</span><span class="inf">ver</span></li><li data-v="dar" hidden><span class="f">damos</span><span class="inf">dar</span></li><li data-v="saber" hidden><span class="f">sabemos</span><span class="inf">saber</span></li><li data-v="querer" hidden><span class="f">queremos</span><span class="inf">querer</span></li><li data-v="llegar" hidden><span class="f">llegamos</span><span class="inf">llegar</span></li><li data-v="pasar" hidden><span class="f">pasamos</span><span class="inf">pasar</span></li><li data-v="deber" hidden><span class="f">debemos</span><span class="inf">deber</span></li><li data-v="poner" hidden><span class="f">ponemos</span><span class="inf">poner</span></li><li data-v="parecer" hidden><span class="f">parecemos</span><span class="inf">parecer</span></li><li data-v="quedar" hidden><span class="f">quedamos</span><span class="inf">quedar</span></li><li data-v="creer" hidden><span class="f">creemos</span><span class="inf">creer</span></li><li data-v="hablar" hidden><span class="f">hablamos</span><span class="inf">hablar</span></li></ul></div></div></section><section class="child branch"><div class="branch-node"><b>2-га особа</b><i>segunda persona</i></div><div class="stem"></div><div class="fork n2"><div class="child leaf"><div class="leaf-node"><b>однина</b><span class="pron">tú</span></div><span class="link" aria-hidden="true"></span><ul class="verbs"><li data-v="ser"><span class="f">eres</span><span class="inf">ser</span></li><li data-v="haber"><span class="f">has</span><span class="inf">haber</span></li><li data-v="estar"><span class="f">estás</span><span class="inf">estar</span></li><li data-v="tener"><span class="f">tienes</span><span class="inf">tener</span></li><li data-v="hacer"><span class="f">haces</span><span class="inf">hacer</span></li><li data-v="poder" hidden><span class="f">puedes</span><span class="inf">poder</span></li><li data-v="decir" hidden><span class="f">dices</span><span class="inf">decir</span></li><li data-v="ir" hidden><span class="f">vas</span><span class="inf">ir</span></li><li data-v="ver" hidden><span class="f">ves</span><span class="inf">ver</span></li><li data-v="dar" hidden><span class="f">das</span><span class="inf">dar</span></li><li data-v="saber" hidden><span class="f">sabes</span><span class="inf">saber</span></li><li data-v="querer" hidden><span class="f">quieres</span><span class="inf">querer</span></li><li data-v="llegar" hidden><span class="f">llegas</span><span class="inf">llegar</span></li><li data-v="pasar" hidden><span class="f">pasas</span><span class="inf">pasar</span></li><li data-v="deber" hidden><span class="f">debes</span><span class="inf">deber</span></li><li data-v="poner" hidden><span class="f">pones</span><span class="inf">poner</span></li><li data-v="parecer" hidden><span class="f">pareces</span><span class="inf">parecer</span></li><li data-v="quedar" hidden><span class="f">quedas</span><span class="inf">quedar</span></li><li data-v="creer" hidden><span class="f">crees</span><span class="inf">creer</span></li><li data-v="hablar" hidden><span class="f">hablas</span><span class="inf">hablar</span></li></ul></div><div class="child leaf"><div class="leaf-node"><b>множина</b><span class="pron">vosotros / vosotras</span></div><span class="link" aria-hidden="true"></span><ul class="verbs"><li data-v="ser"><span class="f">sois</span><span class="inf">ser</span></li><li data-v="haber"><span class="f">habéis</span><span class="inf">haber</span></li><li data-v="estar"><span class="f">estáis</span><span class="inf">estar</span></li><li data-v="tener"><span class="f">tenéis</span><span class="inf">tener</span></li><li data-v="hacer"><span class="f">hacéis</span><span class="inf">hacer</span></li><li data-v="poder" hidden><span class="f">podéis</span><span class="inf">poder</span></li><li data-v="decir" hidden><span class="f">decís</span><span class="inf">decir</span></li><li data-v="ir" hidden><span class="f">vais</span><span class="inf">ir</span></li><li data-v="ver" hidden><span class="f">veis</span><span class="inf">ver</span></li><li data-v="dar" hidden><span class="f">dais</span><span class="inf">dar</span></li><li data-v="saber" hidden><span class="f">sabéis</span><span class="inf">saber</span></li><li data-v="querer" hidden><span class="f">queréis</span><span class="inf">querer</span></li><li data-v="llegar" hidden><span class="f">llegáis</span><span class="inf">llegar</span></li><li data-v="pasar" hidden><span class="f">pasáis</span><span class="inf">pasar</span></li><li data-v="deber" hidden><span class="f">debéis</span><span class="inf">deber</span></li><li data-v="poner" hidden><span class="f">ponéis</span><span class="inf">poner</span></li><li data-v="parecer" hidden><span class="f">parecéis</span><span class="inf">parecer</span></li><li data-v="quedar" hidden><span class="f">quedáis</span><span class="inf">quedar</span></li><li data-v="creer" hidden><span class="f">creéis</span><span class="inf">creer</span></li><li data-v="hablar" hidden><span class="f">habláis</span><span class="inf">hablar</span></li></ul></div></div></section><section class="child branch"><div class="branch-node"><b>3-тя особа</b><i>tercera persona</i></div><div class="stem"></div><div class="fork n2"><div class="child leaf"><div class="leaf-node"><b>однина</b><span class="pron">él / ella / usted</span></div><span class="link" aria-hidden="true"></span><ul class="verbs"><li data-v="ser"><span class="f">es</span><span class="inf">ser</span></li><li data-v="haber"><span class="f">ha</span><span class="inf">haber</span></li><li data-v="estar"><span class="f">está</span><span class="inf">estar</span></li><li data-v="tener"><span class="f">tiene</span><span class="inf">tener</span></li><li data-v="hacer"><span class="f">hace</span><span class="inf">hacer</span></li><li data-v="poder" hidden><span class="f">puede</span><span class="inf">poder</span></li><li data-v="decir" hidden><span class="f">dice</span><span class="inf">decir</span></li><li data-v="ir" hidden><span class="f">va</span><span class="inf">ir</span></li><li data-v="ver" hidden><span class="f">ve</span><span class="inf">ver</span></li><li data-v="dar" hidden><span class="f">da</span><span class="inf">dar</span></li><li data-v="saber" hidden><span class="f">sabe</span><span class="inf">saber</span></li><li data-v="querer" hidden><span class="f">quiere</span><span class="inf">querer</span></li><li data-v="llegar" hidden><span class="f">llega</span><span class="inf">llegar</span></li><li data-v="pasar" hidden><span class="f">pasa</span><span class="inf">pasar</span></li><li data-v="deber" hidden><span class="f">debe</span><span class="inf">deber</span></li><li data-v="poner" hidden><span class="f">pone</span><span class="inf">poner</span></li><li data-v="parecer" hidden><span class="f">parece</span><span class="inf">parecer</span></li><li data-v="quedar" hidden><span class="f">queda</span><span class="inf">quedar</span></li><li data-v="creer" hidden><span class="f">cree</span><span class="inf">creer</span></li><li data-v="hablar" hidden><span class="f">habla</span><span class="inf">hablar</span></li></ul></div><div class="child leaf"><div class="leaf-node"><b>множина</b><span class="pron">ellos / ellas / ustedes</span></div><span class="link" aria-hidden="true"></span><ul class="verbs"><li data-v="ser"><span class="f">son</span><span class="inf">ser</span></li><li data-v="haber"><span class="f">han</span><span class="inf">haber</span></li><li data-v="estar"><span class="f">están</span><span class="inf">estar</span></li><li data-v="tener"><span class="f">tienen</span><span class="inf">tener</span></li><li data-v="hacer"><span class="f">hacen</span><span class="inf">hacer</span></li><li data-v="poder" hidden><span class="f">pueden</span><span class="inf">poder</span></li><li data-v="decir" hidden><span class="f">dicen</span><span class="inf">decir</span></li><li data-v="ir" hidden><span class="f">van</span><span class="inf">ir</span></li><li data-v="ver" hidden><span class="f">ven</span><span class="inf">ver</span></li><li data-v="dar" hidden><span class="f">dan</span><span class="inf">dar</span></li><li data-v="saber" hidden><span class="f">saben</span><span class="inf">saber</span></li><li data-v="querer" hidden><span class="f">quieren</span><span class="inf">querer</span></li><li data-v="llegar" hidden><span class="f">llegan</span><span class="inf">llegar</span></li><li data-v="pasar" hidden><span class="f">pasan</span><span class="inf">pasar</span></li><li data-v="deber" hidden><span class="f">deben</span><span class="inf">deber</span></li><li data-v="poner" hidden><span class="f">ponen</span><span class="inf">poner</span></li><li data-v="parecer" hidden><span class="f">parecen</span><span class="inf">parecer</span></li><li data-v="quedar" hidden><span class="f">quedan</span><span class="inf">quedar</span></li><li data-v="creer" hidden><span class="f">creen</span><span class="inf">creer</span></li><li data-v="hablar" hidden><span class="f">hablan</span><span class="inf">hablar</span></li></ul></div></div></section></div></article>
+<article class="tree" data-t="pret"><div class="tree-root"><div class="root-node"><b>pretérito</b><i>минулий · завершена дія</i></div></div><div class="stem"></div><div class="fork n3"><section class="child branch"><div class="branch-node"><b>1-ша особа</b><i>primera persona</i></div><div class="stem"></div><div class="fork n2"><div class="child leaf"><div class="leaf-node"><b>однина</b><span class="pron">yo</span></div><span class="link" aria-hidden="true"></span><ul class="verbs"><li class="twin" data-v="ser"><span class="f">fui</span><span class="inf">ser</span></li><li data-v="haber"><span class="f">hube</span><span class="inf">haber</span></li><li data-v="estar"><span class="f">estuve</span><span class="inf">estar</span></li><li data-v="tener"><span class="f">tuve</span><span class="inf">tener</span></li><li data-v="hacer"><span class="f">hice</span><span class="inf">hacer</span></li><li data-v="poder" hidden><span class="f">pude</span><span class="inf">poder</span></li><li data-v="decir" hidden><span class="f">dije</span><span class="inf">decir</span></li><li class="twin" data-v="ir" hidden><span class="f">fui</span><span class="inf">ir</span></li><li data-v="ver" hidden><span class="f">vi</span><span class="inf">ver</span></li><li data-v="dar" hidden><span class="f">di</span><span class="inf">dar</span></li><li data-v="saber" hidden><span class="f">supe</span><span class="inf">saber</span></li><li data-v="querer" hidden><span class="f">quise</span><span class="inf">querer</span></li><li data-v="llegar" hidden><span class="f">llegué</span><span class="inf">llegar</span></li><li data-v="pasar" hidden><span class="f">pasé</span><span class="inf">pasar</span></li><li data-v="deber" hidden><span class="f">debí</span><span class="inf">deber</span></li><li data-v="poner" hidden><span class="f">puse</span><span class="inf">poner</span></li><li data-v="parecer" hidden><span class="f">parecí</span><span class="inf">parecer</span></li><li data-v="quedar" hidden><span class="f">quedé</span><span class="inf">quedar</span></li><li data-v="creer" hidden><span class="f">creí</span><span class="inf">creer</span></li><li data-v="hablar" hidden><span class="f">hablé</span><span class="inf">hablar</span></li></ul></div><div class="child leaf"><div class="leaf-node"><b>множина</b><span class="pron">nosotros / nosotras</span></div><span class="link" aria-hidden="true"></span><ul class="verbs"><li class="twin" data-v="ser"><span class="f">fuimos</span><span class="inf">ser</span></li><li data-v="haber"><span class="f">hubimos</span><span class="inf">haber</span></li><li data-v="estar"><span class="f">estuvimos</span><span class="inf">estar</span></li><li data-v="tener"><span class="f">tuvimos</span><span class="inf">tener</span></li><li data-v="hacer"><span class="f">hicimos</span><span class="inf">hacer</span></li><li data-v="poder" hidden><span class="f">pudimos</span><span class="inf">poder</span></li><li data-v="decir" hidden><span class="f">dijimos</span><span class="inf">decir</span></li><li class="twin" data-v="ir" hidden><span class="f">fuimos</span><span class="inf">ir</span></li><li data-v="ver" hidden><span class="f">vimos</span><span class="inf">ver</span></li><li data-v="dar" hidden><span class="f">dimos</span><span class="inf">dar</span></li><li data-v="saber" hidden><span class="f">supimos</span><span class="inf">saber</span></li><li data-v="querer" hidden><span class="f">quisimos</span><span class="inf">querer</span></li><li data-v="llegar" hidden><span class="f">llegamos</span><span class="inf">llegar</span></li><li data-v="pasar" hidden><span class="f">pasamos</span><span class="inf">pasar</span></li><li data-v="deber" hidden><span class="f">debimos</span><span class="inf">deber</span></li><li data-v="poner" hidden><span class="f">pusimos</span><span class="inf">poner</span></li><li data-v="parecer" hidden><span class="f">parecimos</span><span class="inf">parecer</span></li><li data-v="quedar" hidden><span class="f">quedamos</span><span class="inf">quedar</span></li><li data-v="creer" hidden><span class="f">creímos</span><span class="inf">creer</span></li><li data-v="hablar" hidden><span class="f">hablamos</span><span class="inf">hablar</span></li></ul></div></div></section><section class="child branch"><div class="branch-node"><b>2-га особа</b><i>segunda persona</i></div><div class="stem"></div><div class="fork n2"><div class="child leaf"><div class="leaf-node"><b>однина</b><span class="pron">tú</span></div><span class="link" aria-hidden="true"></span><ul class="verbs"><li class="twin" data-v="ser"><span class="f">fuiste</span><span class="inf">ser</span></li><li data-v="haber"><span class="f">hubiste</span><span class="inf">haber</span></li><li data-v="estar"><span class="f">estuviste</span><span class="inf">estar</span></li><li data-v="tener"><span class="f">tuviste</span><span class="inf">tener</span></li><li data-v="hacer"><span class="f">hiciste</span><span class="inf">hacer</span></li><li data-v="poder" hidden><span class="f">pudiste</span><span class="inf">poder</span></li><li data-v="decir" hidden><span class="f">dijiste</span><span class="inf">decir</span></li><li class="twin" data-v="ir" hidden><span class="f">fuiste</span><span class="inf">ir</span></li><li data-v="ver" hidden><span class="f">viste</span><span class="inf">ver</span></li><li data-v="dar" hidden><span class="f">diste</span><span class="inf">dar</span></li><li data-v="saber" hidden><span class="f">supiste</span><span class="inf">saber</span></li><li data-v="querer" hidden><span class="f">quisiste</span><span class="inf">querer</span></li><li data-v="llegar" hidden><span class="f">llegaste</span><span class="inf">llegar</span></li><li data-v="pasar" hidden><span class="f">pasaste</span><span class="inf">pasar</span></li><li data-v="deber" hidden><span class="f">debiste</span><span class="inf">deber</span></li><li data-v="poner" hidden><span class="f">pusiste</span><span class="inf">poner</span></li><li data-v="parecer" hidden><span class="f">pareciste</span><span class="inf">parecer</span></li><li data-v="quedar" hidden><span class="f">quedaste</span><span class="inf">quedar</span></li><li data-v="creer" hidden><span class="f">creíste</span><span class="inf">creer</span></li><li data-v="hablar" hidden><span class="f">hablaste</span><span class="inf">hablar</span></li></ul></div><div class="child leaf"><div class="leaf-node"><b>множина</b><span class="pron">vosotros / vosotras</span></div><span class="link" aria-hidden="true"></span><ul class="verbs"><li class="twin" data-v="ser"><span class="f">fuisteis</span><span class="inf">ser</span></li><li data-v="haber"><span class="f">hubisteis</span><span class="inf">haber</span></li><li data-v="estar"><span class="f">estuvisteis</span><span class="inf">estar</span></li><li data-v="tener"><span class="f">tuvisteis</span><span class="inf">tener</span></li><li data-v="hacer"><span class="f">hicisteis</span><span class="inf">hacer</span></li><li data-v="poder" hidden><span class="f">pudisteis</span><span class="inf">poder</span></li><li data-v="decir" hidden><span class="f">dijisteis</span><span class="inf">decir</span></li><li class="twin" data-v="ir" hidden><span class="f">fuisteis</span><span class="inf">ir</span></li><li data-v="ver" hidden><span class="f">visteis</span><span class="inf">ver</span></li><li data-v="dar" hidden><span class="f">disteis</span><span class="inf">dar</span></li><li data-v="saber" hidden><span class="f">supisteis</span><span class="inf">saber</span></li><li data-v="querer" hidden><span class="f">quisisteis</span><span class="inf">querer</span></li><li data-v="llegar" hidden><span class="f">llegasteis</span><span class="inf">llegar</span></li><li data-v="pasar" hidden><span class="f">pasasteis</span><span class="inf">pasar</span></li><li data-v="deber" hidden><span class="f">debisteis</span><span class="inf">deber</span></li><li data-v="poner" hidden><span class="f">pusisteis</span><span class="inf">poner</span></li><li data-v="parecer" hidden><span class="f">parecisteis</span><span class="inf">parecer</span></li><li data-v="quedar" hidden><span class="f">quedasteis</span><span class="inf">quedar</span></li><li data-v="creer" hidden><span class="f">creísteis</span><span class="inf">creer</span></li><li data-v="hablar" hidden><span class="f">hablasteis</span><span class="inf">hablar</span></li></ul></div></div></section><section class="child branch"><div class="branch-node"><b>3-тя особа</b><i>tercera persona</i></div><div class="stem"></div><div class="fork n2"><div class="child leaf"><div class="leaf-node"><b>однина</b><span class="pron">él / ella / usted</span></div><span class="link" aria-hidden="true"></span><ul class="verbs"><li class="twin" data-v="ser"><span class="f">fue</span><span class="inf">ser</span></li><li data-v="haber"><span class="f">hubo</span><span class="inf">haber</span></li><li data-v="estar"><span class="f">estuvo</span><span class="inf">estar</span></li><li data-v="tener"><span class="f">tuvo</span><span class="inf">tener</span></li><li data-v="hacer"><span class="f">hizo</span><span class="inf">hacer</span></li><li data-v="poder" hidden><span class="f">pudo</span><span class="inf">poder</span></li><li data-v="decir" hidden><span class="f">dijo</span><span class="inf">decir</span></li><li class="twin" data-v="ir" hidden><span class="f">fue</span><span class="inf">ir</span></li><li data-v="ver" hidden><span class="f">vio</span><span class="inf">ver</span></li><li data-v="dar" hidden><span class="f">dio</span><span class="inf">dar</span></li><li data-v="saber" hidden><span class="f">supo</span><span class="inf">saber</span></li><li data-v="querer" hidden><span class="f">quiso</span><span class="inf">querer</span></li><li data-v="llegar" hidden><span class="f">llegó</span><span class="inf">llegar</span></li><li data-v="pasar" hidden><span class="f">pasó</span><span class="inf">pasar</span></li><li data-v="deber" hidden><span class="f">debió</span><span class="inf">deber</span></li><li data-v="poner" hidden><span class="f">puso</span><span class="inf">poner</span></li><li data-v="parecer" hidden><span class="f">pareció</span><span class="inf">parecer</span></li><li data-v="quedar" hidden><span class="f">quedó</span><span class="inf">quedar</span></li><li data-v="creer" hidden><span class="f">creyó</span><span class="inf">creer</span></li><li data-v="hablar" hidden><span class="f">habló</span><span class="inf">hablar</span></li></ul></div><div class="child leaf"><div class="leaf-node"><b>множина</b><span class="pron">ellos / ellas / ustedes</span></div><span class="link" aria-hidden="true"></span><ul class="verbs"><li class="twin" data-v="ser"><span class="f">fueron</span><span class="inf">ser</span></li><li data-v="haber"><span class="f">hubieron</span><span class="inf">haber</span></li><li data-v="estar"><span class="f">estuvieron</span><span class="inf">estar</span></li><li data-v="tener"><span class="f">tuvieron</span><span class="inf">tener</span></li><li data-v="hacer"><span class="f">hicieron</span><span class="inf">hacer</span></li><li data-v="poder" hidden><span class="f">pudieron</span><span class="inf">poder</span></li><li data-v="decir" hidden><span class="f">dijeron</span><span class="inf">decir</span></li><li class="twin" data-v="ir" hidden><span class="f">fueron</span><span class="inf">ir</span></li><li data-v="ver" hidden><span class="f">vieron</span><span class="inf">ver</span></li><li data-v="dar" hidden><span class="f">dieron</span><span class="inf">dar</span></li><li data-v="saber" hidden><span class="f">supieron</span><span class="inf">saber</span></li><li data-v="querer" hidden><span class="f">quisieron</span><span class="inf">querer</span></li><li data-v="llegar" hidden><span class="f">llegaron</span><span class="inf">llegar</span></li><li data-v="pasar" hidden><span class="f">pasaron</span><span class="inf">pasar</span></li><li data-v="deber" hidden><span class="f">debieron</span><span class="inf">deber</span></li><li data-v="poner" hidden><span class="f">pusieron</span><span class="inf">poner</span></li><li data-v="parecer" hidden><span class="f">parecieron</span><span class="inf">parecer</span></li><li data-v="quedar" hidden><span class="f">quedaron</span><span class="inf">quedar</span></li><li data-v="creer" hidden><span class="f">creyeron</span><span class="inf">creer</span></li><li data-v="hablar" hidden><span class="f">hablaron</span><span class="inf">hablar</span></li></ul></div></div></section></div></article>
+<article class="tree" data-t="fut"><div class="tree-root"><div class="root-node"><b>futuro</b><i>майбутній</i></div></div><div class="stem"></div><div class="fork n3"><section class="child branch"><div class="branch-node"><b>1-ша особа</b><i>primera persona</i></div><div class="stem"></div><div class="fork n2"><div class="child leaf"><div class="leaf-node"><b>однина</b><span class="pron">yo</span></div><span class="link" aria-hidden="true"></span><ul class="verbs"><li data-v="ser"><span class="f">seré</span><span class="inf">ser</span></li><li data-v="haber"><span class="f">habré</span><span class="inf">haber</span></li><li data-v="estar"><span class="f">estaré</span><span class="inf">estar</span></li><li data-v="tener"><span class="f">tendré</span><span class="inf">tener</span></li><li data-v="hacer"><span class="f">haré</span><span class="inf">hacer</span></li><li data-v="poder" hidden><span class="f">podré</span><span class="inf">poder</span></li><li data-v="decir" hidden><span class="f">diré</span><span class="inf">decir</span></li><li data-v="ir" hidden><span class="f">iré</span><span class="inf">ir</span></li><li data-v="ver" hidden><span class="f">veré</span><span class="inf">ver</span></li><li data-v="dar" hidden><span class="f">daré</span><span class="inf">dar</span></li><li data-v="saber" hidden><span class="f">sabré</span><span class="inf">saber</span></li><li data-v="querer" hidden><span class="f">querré</span><span class="inf">querer</span></li><li data-v="llegar" hidden><span class="f">llegaré</span><span class="inf">llegar</span></li><li data-v="pasar" hidden><span class="f">pasaré</span><span class="inf">pasar</span></li><li data-v="deber" hidden><span class="f">deberé</span><span class="inf">deber</span></li><li data-v="poner" hidden><span class="f">pondré</span><span class="inf">poner</span></li><li data-v="parecer" hidden><span class="f">pareceré</span><span class="inf">parecer</span></li><li data-v="quedar" hidden><span class="f">quedaré</span><span class="inf">quedar</span></li><li data-v="creer" hidden><span class="f">creeré</span><span class="inf">creer</span></li><li data-v="hablar" hidden><span class="f">hablaré</span><span class="inf">hablar</span></li></ul></div><div class="child leaf"><div class="leaf-node"><b>множина</b><span class="pron">nosotros / nosotras</span></div><span class="link" aria-hidden="true"></span><ul class="verbs"><li data-v="ser"><span class="f">seremos</span><span class="inf">ser</span></li><li data-v="haber"><span class="f">habremos</span><span class="inf">haber</span></li><li data-v="estar"><span class="f">estaremos</span><span class="inf">estar</span></li><li data-v="tener"><span class="f">tendremos</span><span class="inf">tener</span></li><li data-v="hacer"><span class="f">haremos</span><span class="inf">hacer</span></li><li data-v="poder" hidden><span class="f">podremos</span><span class="inf">poder</span></li><li data-v="decir" hidden><span class="f">diremos</span><span class="inf">decir</span></li><li data-v="ir" hidden><span class="f">iremos</span><span class="inf">ir</span></li><li data-v="ver" hidden><span class="f">veremos</span><span class="inf">ver</span></li><li data-v="dar" hidden><span class="f">daremos</span><span class="inf">dar</span></li><li data-v="saber" hidden><span class="f">sabremos</span><span class="inf">saber</span></li><li data-v="querer" hidden><span class="f">querremos</span><span class="inf">querer</span></li><li data-v="llegar" hidden><span class="f">llegaremos</span><span class="inf">llegar</span></li><li data-v="pasar" hidden><span class="f">pasaremos</span><span class="inf">pasar</span></li><li data-v="deber" hidden><span class="f">deberemos</span><span class="inf">deber</span></li><li data-v="poner" hidden><span class="f">pondremos</span><span class="inf">poner</span></li><li data-v="parecer" hidden><span class="f">pareceremos</span><span class="inf">parecer</span></li><li data-v="quedar" hidden><span class="f">quedaremos</span><span class="inf">quedar</span></li><li data-v="creer" hidden><span class="f">creeremos</span><span class="inf">creer</span></li><li data-v="hablar" hidden><span class="f">hablaremos</span><span class="inf">hablar</span></li></ul></div></div></section><section class="child branch"><div class="branch-node"><b>2-га особа</b><i>segunda persona</i></div><div class="stem"></div><div class="fork n2"><div class="child leaf"><div class="leaf-node"><b>однина</b><span class="pron">tú</span></div><span class="link" aria-hidden="true"></span><ul class="verbs"><li data-v="ser"><span class="f">serás</span><span class="inf">ser</span></li><li data-v="haber"><span class="f">habrás</span><span class="inf">haber</span></li><li data-v="estar"><span class="f">estarás</span><span class="inf">estar</span></li><li data-v="tener"><span class="f">tendrás</span><span class="inf">tener</span></li><li data-v="hacer"><span class="f">harás</span><span class="inf">hacer</span></li><li data-v="poder" hidden><span class="f">podrás</span><span class="inf">poder</span></li><li data-v="decir" hidden><span class="f">dirás</span><span class="inf">decir</span></li><li data-v="ir" hidden><span class="f">irás</span><span class="inf">ir</span></li><li data-v="ver" hidden><span class="f">verás</span><span class="inf">ver</span></li><li data-v="dar" hidden><span class="f">darás</span><span class="inf">dar</span></li><li data-v="saber" hidden><span class="f">sabrás</span><span class="inf">saber</span></li><li data-v="querer" hidden><span class="f">querrás</span><span class="inf">querer</span></li><li data-v="llegar" hidden><span class="f">llegarás</span><span class="inf">llegar</span></li><li data-v="pasar" hidden><span class="f">pasarás</span><span class="inf">pasar</span></li><li data-v="deber" hidden><span class="f">deberás</span><span class="inf">deber</span></li><li data-v="poner" hidden><span class="f">pondrás</span><span class="inf">poner</span></li><li data-v="parecer" hidden><span class="f">parecerás</span><span class="inf">parecer</span></li><li data-v="quedar" hidden><span class="f">quedarás</span><span class="inf">quedar</span></li><li data-v="creer" hidden><span class="f">creerás</span><span class="inf">creer</span></li><li data-v="hablar" hidden><span class="f">hablarás</span><span class="inf">hablar</span></li></ul></div><div class="child leaf"><div class="leaf-node"><b>множина</b><span class="pron">vosotros / vosotras</span></div><span class="link" aria-hidden="true"></span><ul class="verbs"><li data-v="ser"><span class="f">seréis</span><span class="inf">ser</span></li><li data-v="haber"><span class="f">habréis</span><span class="inf">haber</span></li><li data-v="estar"><span class="f">estaréis</span><span class="inf">estar</span></li><li data-v="tener"><span class="f">tendréis</span><span class="inf">tener</span></li><li data-v="hacer"><span class="f">haréis</span><span class="inf">hacer</span></li><li data-v="poder" hidden><span class="f">podréis</span><span class="inf">poder</span></li><li data-v="decir" hidden><span class="f">diréis</span><span class="inf">decir</span></li><li data-v="ir" hidden><span class="f">iréis</span><span class="inf">ir</span></li><li data-v="ver" hidden><span class="f">veréis</span><span class="inf">ver</span></li><li data-v="dar" hidden><span class="f">daréis</span><span class="inf">dar</span></li><li data-v="saber" hidden><span class="f">sabréis</span><span class="inf">saber</span></li><li data-v="querer" hidden><span class="f">querréis</span><span class="inf">querer</span></li><li data-v="llegar" hidden><span class="f">llegaréis</span><span class="inf">llegar</span></li><li data-v="pasar" hidden><span class="f">pasaréis</span><span class="inf">pasar</span></li><li data-v="deber" hidden><span class="f">deberéis</span><span class="inf">deber</span></li><li data-v="poner" hidden><span class="f">pondréis</span><span class="inf">poner</span></li><li data-v="parecer" hidden><span class="f">pareceréis</span><span class="inf">parecer</span></li><li data-v="quedar" hidden><span class="f">quedaréis</span><span class="inf">quedar</span></li><li data-v="creer" hidden><span class="f">creeréis</span><span class="inf">creer</span></li><li data-v="hablar" hidden><span class="f">hablaréis</span><span class="inf">hablar</span></li></ul></div></div></section><section class="child branch"><div class="branch-node"><b>3-тя особа</b><i>tercera persona</i></div><div class="stem"></div><div class="fork n2"><div class="child leaf"><div class="leaf-node"><b>однина</b><span class="pron">él / ella / usted</span></div><span class="link" aria-hidden="true"></span><ul class="verbs"><li data-v="ser"><span class="f">será</span><span class="inf">ser</span></li><li data-v="haber"><span class="f">habrá</span><span class="inf">haber</span></li><li data-v="estar"><span class="f">estará</span><span class="inf">estar</span></li><li data-v="tener"><span class="f">tendrá</span><span class="inf">tener</span></li><li data-v="hacer"><span class="f">hará</span><span class="inf">hacer</span></li><li data-v="poder" hidden><span class="f">podrá</span><span class="inf">poder</span></li><li data-v="decir" hidden><span class="f">dirá</span><span class="inf">decir</span></li><li data-v="ir" hidden><span class="f">irá</span><span class="inf">ir</span></li><li data-v="ver" hidden><span class="f">verá</span><span class="inf">ver</span></li><li data-v="dar" hidden><span class="f">dará</span><span class="inf">dar</span></li><li data-v="saber" hidden><span class="f">sabrá</span><span class="inf">saber</span></li><li data-v="querer" hidden><span class="f">querrá</span><span class="inf">querer</span></li><li data-v="llegar" hidden><span class="f">llegará</span><span class="inf">llegar</span></li><li data-v="pasar" hidden><span class="f">pasará</span><span class="inf">pasar</span></li><li data-v="deber" hidden><span class="f">deberá</span><span class="inf">deber</span></li><li data-v="poner" hidden><span class="f">pondrá</span><span class="inf">poner</span></li><li data-v="parecer" hidden><span class="f">parecerá</span><span class="inf">parecer</span></li><li data-v="quedar" hidden><span class="f">quedará</span><span class="inf">quedar</span></li><li data-v="creer" hidden><span class="f">creerá</span><span class="inf">creer</span></li><li data-v="hablar" hidden><span class="f">hablará</span><span class="inf">hablar</span></li></ul></div><div class="child leaf"><div class="leaf-node"><b>множина</b><span class="pron">ellos / ellas / ustedes</span></div><span class="link" aria-hidden="true"></span><ul class="verbs"><li data-v="ser"><span class="f">serán</span><span class="inf">ser</span></li><li data-v="haber"><span class="f">habrán</span><span class="inf">haber</span></li><li data-v="estar"><span class="f">estarán</span><span class="inf">estar</span></li><li data-v="tener"><span class="f">tendrán</span><span class="inf">tener</span></li><li data-v="hacer"><span class="f">harán</span><span class="inf">hacer</span></li><li data-v="poder" hidden><span class="f">podrán</span><span class="inf">poder</span></li><li data-v="decir" hidden><span class="f">dirán</span><span class="inf">decir</span></li><li data-v="ir" hidden><span class="f">irán</span><span class="inf">ir</span></li><li data-v="ver" hidden><span class="f">verán</span><span class="inf">ver</span></li><li data-v="dar" hidden><span class="f">darán</span><span class="inf">dar</span></li><li data-v="saber" hidden><span class="f">sabrán</span><span class="inf">saber</span></li><li data-v="querer" hidden><span class="f">querrán</span><span class="inf">querer</span></li><li data-v="llegar" hidden><span class="f">llegarán</span><span class="inf">llegar</span></li><li data-v="pasar" hidden><span class="f">pasarán</span><span class="inf">pasar</span></li><li data-v="deber" hidden><span class="f">deberán</span><span class="inf">deber</span></li><li data-v="poner" hidden><span class="f">pondrán</span><span class="inf">poner</span></li><li data-v="parecer" hidden><span class="f">parecerán</span><span class="inf">parecer</span></li><li data-v="quedar" hidden><span class="f">quedarán</span><span class="inf">quedar</span></li><li data-v="creer" hidden><span class="f">creerán</span><span class="inf">creer</span></li><li data-v="hablar" hidden><span class="f">hablarán</span><span class="inf">hablar</span></li></ul></div></div></section></div></article>
+
+  <div class="notes">
+    <div class="note"><b>Займенники</b><code>usted / ustedes</code> — «Ви», граматично теж 3-тя особа, тому форми такі самі, як у <code>él</code> і <code>ellos</code>. <code>vosotros</code> — переважно Іспанія; в Латинській Америці кажуть <code>ustedes</code>.</div>
+    <div class="note"><b>ser і ir в pretérito</b>Підкреслені форми однакові: <code>fui</code> = «я був» і «я пішов». Значення видно з контексту: <em>Fui a Madrid</em> — я поїхав до Мадрида; <em>Fui profesor</em> — я був викладачем.</div>
+    <div class="note"><b>-ar у nosotros</b>У регулярних дієсловах на -ar (hablar, llegar, pasar, quedar) форма nosotros у presente й pretérito однакова: <code>hablamos</code> = «ми говоримо» і «ми говорили». Різницю дає контекст.</div>
+    <div class="note"><b>haber</b><code>he, has, ha…</code> — допоміжне дієслово (<em>he comido</em>). Окремо є безособове <code>hay</code> — «є, існує». У pretérito найчастіше трапляється <code>hubo</code>: <em>Hubo un problema</em> — Була проблема.</div>
+    <div class="note"><b>Про futuro</b>Тут показано futuro simple. У розмові майбутнє частіше будують через <code>ir a</code> + інфінітив: <em>voy a escalar</em>, <em>vas a hacer</em>. Futuro simple частіший у письмі та формальнішій мові.</div>
+  </div>
+
+  <div class="totop-row"><button type="button" class="totop" id="totop">↑ До фільтрів</button></div>
+</div>
+
+<script>
+(function(){
+  var tBtns=[].slice.call(document.querySelectorAll('.lg'));
+  var vBtns=[].slice.call(document.querySelectorAll('.vc'));
+  var trees=[].slice.call(document.querySelectorAll('.tree'));
+  var items=[].slice.call(document.querySelectorAll('.verbs li'));
+  var presets=[].slice.call(document.querySelectorAll('.pre'));
+  var statusEl=document.getElementById('status');
+  var vcount=document.getElementById('vcount');
+  var panel=document.getElementById('vpanel');
+  var selT={pres:true,pret:true,fut:true};
+  var selV={};
+  vBtns.forEach(function(b,i){selV[b.dataset.v]=(i<5);});
+  var timer=null;
+
+  function count(o){return Object.keys(o).filter(function(k){return o[k];}).length;}
+  function summary(){
+    return 'Часи: '+count(selT)+' з '+tBtns.length+' · Дієслова: '+count(selV)+' з '+vBtns.length;
+  }
+  function warn(msg){
+    statusEl.textContent=msg;
+    clearTimeout(timer);
+    timer=setTimeout(function(){statusEl.textContent=summary();},2200);
+  }
+  function render(){
+    tBtns.forEach(function(b){b.setAttribute('aria-pressed',String(!!selT[b.dataset.t]));});
+    vBtns.forEach(function(b){b.setAttribute('aria-pressed',String(!!selV[b.dataset.v]));});
+    trees.forEach(function(t){t.hidden=!selT[t.dataset.t];});
+    items.forEach(function(li){li.hidden=!selV[li.dataset.v];});
+    vcount.textContent=count(selV)+' з '+vBtns.length;
+    statusEl.textContent=summary();
+  }
+
+  tBtns.forEach(function(b){
+    b.addEventListener('click',function(){
+      var t=b.dataset.t;
+      if(selT[t]&&count(selT)===1){warn('Має лишитися хоча б один час.');return;}
+      selT[t]=!selT[t];
+      render();
+    });
+  });
+  vBtns.forEach(function(b){
+    b.addEventListener('click',function(){
+      var v=b.dataset.v;
+      if(selV[v]&&count(selV)===1){warn('Має лишитися хоча б одне дієслово.');return;}
+      selV[v]=!selV[v];
+      render();
+    });
+  });
+  presets.forEach(function(b){
+    b.addEventListener('click',function(){
+      var n=parseInt(b.dataset.n,10);
+      vBtns.forEach(function(x,i){selV[x.dataset.v]=(i<n);});
+      render();
+    });
+  });
+  document.getElementById('totop').addEventListener('click',function(){
+    var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.getElementById('filters').scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
+  });
+
+  if(window.matchMedia&&window.matchMedia('(min-width: 900px)').matches){panel.open=true;}
+  render();
+})();
+</script>
+<script>
+(function(){
+  if('serviceWorker' in navigator){
+    window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
+  }
+  var btn=document.getElementById('install');
+  var hint=document.getElementById('install-hint');
+  var dp=null;
+  var standalone=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone===true;
+  if(standalone){btn.hidden=true;return;}
+  window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();dp=e;});
+  window.addEventListener('appinstalled',function(){btn.hidden=true;hint.hidden=true;dp=null;});
+  btn.addEventListener('click',function(){
+    if(dp){
+      dp.prompt();
+      dp.userChoice.then(function(){dp=null;});
+    }else{
+      hint.textContent='Браузер зараз не пропонує встановлення. Відкрий сторінку в Chrome або Edge за адресою https:// чи http://localhost, оновлюй її раз і спробуй знову. Можна й вручну: меню ⋮ → «Встановити застосунок» (на Android — «Додати на головний екран»). В Safari на iPhone: «Поділитись» → «На початковий екран».';
+      hint.hidden=false;
+    }
+  });
+})();
+</script>
+</body>
+</html>
